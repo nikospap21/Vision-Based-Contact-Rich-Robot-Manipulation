@@ -1,73 +1,77 @@
 # Project 2: Vision-Based Contact-Rich Robot Manipulation
 
-This repository contains the complete implementation for Project 2 of the **Intelligent Control** course (Academic Year 2025-2026).
-It is implemented from team 2:
+This repository contains the complete implementation for Project 2 of the **Intelligent Control** course (Academic Year 2025-2026).  
+Developed by **Team 2**:
 
-| Name                  | Id    |
-|-----------------------|-------|
-|Mpantekas Nikolaos     |1092562|
-|Papoutsopoulos Nikolaos|1101000|
-|Stathopoulos Stavros   |1101069|
-
----
-
-## Objective (The Task)
-
-The goal is to control a 7-DOF **Franka Emika Panda** robotic arm equipped with a **PandaGripper** in a contact-rich assembly environment (**NutAssembly**). The robot must successfully execute the following sequential policy:
-
-1. **Perceive & Grasp:** Locate and securely grasp a nut.
-2. **Transport & Align:** Transfer the nut above the corresponding peg and align it with high precision.
-3. **Insertion:** Successfully insert the nut onto the peg.
+| Name                    | Student ID |
+| Mpantekas Nikolaos      |   1092562  |
+| Papoutsopoulos Nikolaos |   1101000  |
+| Stathopoulos Stavros    |   1101069  |
 
 ---
 
-## Primary Challenges
+## 🎯 Objective & System Overview
 
-### Vision-Based Control
+The objective is to control a 7-DOF **Franka Emika Panda** robotic arm equipped with a **PandaGripper** in a contact-rich assembly task (**NutAssembly**) within the **MuJoCo** simulation engine (via **robosuite**). The robot must execute a sequential closed-loop policy:
 
-In typical simulation environments, policies enjoy "privileged information" (the exact $x, y, z$ coordinates of the object extracted directly from the physics engine). For this project, **privileged state access is strictly prohibited** (`use_object_obs=False`). Your policy must map raw image tensors (e.g., `agentview_image` at an $84 \times 84$ resolution) directly to actions. The agent must infer geometry and spatial relationships purely from visual features.
-
-### Contact-Rich Dynamics
-
-The moment the nut interfaces with the peg, high friction and contact forces dominate the system dynamics. A micro-scale positional error (on the millimeter level) will cause jam states or wedging. The controller must actively manage these contact forces and, crucially, demonstrate **error recovery** (e.g., adapting to finger slippage, initial alignment failures, or unstable grasps).
+1. **Perceive & Grasp:** Locate and securely grasp a nut without privileged ground-truth state data.
+2. **Transport & Align:** Transfer the nut above the designated peg and align it with millimeter precision.
+3. **Insertion:** Execute contact-rich insertion while handling stiff interface forces and recovery states.
 
 ---
 
-## Simulation Environment
+## 📂 Repository Structure
 
-The project is built on **robosuite**, a simulation framework powered by the **MuJoCo** physics engine. You are provided with a baseline Operational Space Controller (OSC) for Cartesian end-effector control. Your objective is to replace the random action sampling interface (`env.action_spec[0].sample()`) with an intelligent, closed-loop control policy.
+```text
+├── src/
+│   ├── controllers/
+│   │   ├── base_controller.py       # Abstract base class for controllers
+│   │   └── baseline_controller/     # Heuristic Expert (Finite State Machine)
+│   ├── encoders/
+│   │   ├── cnn_encoder.py           # Custom NatureCNN visual feature extractor
+│   │   └── preprocessing.py         # Image normalization and preprocessing pipeline
+│   ├── environments/
+│   │   ├── gym_wrapper.py           # Robosuite to Gymnasium API environment wrapper
+│   │   └── test_wrapper.py          # Wrapper verification and smoke test script
+│   └── models/
+│       ├── train_bc.py              # Behavior Cloning training pipeline[cite: 1]
+│       ├── evaluate_bc.py           # Evaluation script for BC policy[cite: 1]
+│       ├── train_rl.py              # Autonomous SAC agent training (Iterative Block Training)[cite: 1]
+│       └── test_rl.py               # Live 3D MuJoCo simulation and performance plotting[cite: 1]
+├── rl_logs/                         # Training logs, checkpoints, and evaluation plots[cite: 1]
+├── requirements.txt                 # Software dependencies and libraries[cite: 1]
+├── DEVELOPMENT.md                   # Implementation timeline and changelog[cite: 1]
+├── instructions.md                  # Installation and execution instructions[cite: 1]
+└── README.md                        # Project documentation[cite: 1]
 
----
+⚙️ Installation & SetupOption A: Windows (PowerShell)PowerShell# Clone your fork
+git clone [https://github.com/nikospap21/Vision-Based-Contact-Rich-Robot-Manipulation.git](https://github.com/nikospap21/Vision-Based-Contact-Rich-Robot-Manipulation.git)
+cd Vision-Based-Contact-Rich-Robot-Manipulation
 
-## Evaluation Criteria (Stress Tests & Robustness)
+# Setup virtual environment[cite: 1]
+python -m venv ic_env[cite: 1]
+.\ic_env\Scripts\Activate.ps1[cite: 1]
 
-Evaluation will not occur under static, nominal conditions. Solutions will be subjected to unannounced **stress tests featuring randomized initial conditions**:
+# Install dependencies[cite: 1]
+python -m pip install --upgrade pip[cite: 1]
+pip install -r requirements.txt[cite: 1]
+Option B: Linux (Ubuntu / Debian)Bash# System dependencies for MuJoCo rendering[cite: 1]
+sudo apt-get update[cite: 1]
+sudo apt-get install -y libgl1-mesa-dev libglib2.0-0 libosmesa6-dev patchelf python3-pip python3-venv[cite: 1]
 
-* Randomized initial position and orientation (yaw) of the nut.
-* Perturbations in peg geometry and placement.
-* Variations in physical properties (friction coefficients, object mass).
-* Visual domain shifts (lighting variations, camera angle perturbations).
+# Clone and setup environment
+git clone [https://github.com/nikospap21/Vision-Based-Contact-Rich-Robot-Manipulation.git](https://github.com/nikospap21/Vision-Based-Contact-Rich-Robot-Manipulation.git)
+cd Vision-Based-Contact-Rich-Robot-Manipulation
 
-Performance metrics are strictly bound to **Success Rate**, **Cumulative Reward**, and **Robustness/Recovery Capabilities** under stress.
+python3 -m venv ic_env[cite: 1]
+source ic_env/bin/activate[cite: 1]
 
----
-
-## Permissible Methodologies
-
-The architecture design is completely open-ended. Viable paradigms include:
-
-* **Reinforcement Learning (RL):** Model-free algorithms (e.g., PPO, SAC, TD3) coupled with Convolutional Neural Networks (CNNs) or Vision Transformers (ViTs) for visual encoding.
-* **Imitation Learning / Behavior Cloning:** Training policies on expert demonstrations.
-* **Hybrid Architectures:** Combining classical control theory (e.g., Model Predictive Control / Operational Space Control) for free-space trajectory tracking, and switching to RL/Impedance control for the contact-rich insertion phase.
-
----
-
-## Deliverables
-
-Each team must submit:
-
-1. **Controller Module:** A production-ready controller implementing the required `Controller` interface.
-2. **Source Code:** Fully reproducible training and evaluation pipelines.
-3. **Model Artifacts:** Trained weights, network checkpoints, or learned parameter configurations.
-4. **Demonstration Video:** A short video showcasing nominal success cases along with critical failure modes and recoveries.
-5. **Technical Report:** A comprehensive engineering report detailing methodology, experimental results, ablation studies, and failure case analyses.
+pip install --upgrade pip[cite: 1]
+pip install -r requirements.txt[cite: 1]
+🚀 Execution PipelineNote: Ensure your virtual environment (ic_env) is activated before running any scripts[cite: 1].Environment Verification:[cite: 1]Bashpython -m src.environments.test_wrapper[cite: 1]
+Expert Demonstration Collection:[cite: 1]Bashpython -m src.demos.collect_demos[cite: 1]
+Behavior Cloning (BC) Training & Evaluation:[cite: 1]Bashpython -m src.models.train_bc[cite: 1]
+python -m src.models.evaluate_bc[cite: 1]
+Soft Actor-Critic (SAC) Autonomous Learning:[cite: 1]Bashpython -m src.models.train_rl[cite: 1]
+Live Simulation & Evaluation Plot:[cite: 1]Bashpython -m src.models.test_rl[cite: 1]
+⚠️ Academic Scope, Challenges & LimitationsThis project is developed as an academic exploration of end-to-end visual policies for contact-rich robotic tasks.Primary Engineering Challenges:Vision-Based Control: Privileged ground-truth coordinates are strictly prohibited (use_object_obs=False). The policy must infer spatial geometry purely from raw $84 \times 84$ image tensors (agentview_image).Contact Dynamics & Jamming: Sub-millimeter misalignment at the peg-nut interface induces extreme contact forces, requiring active compliance and error recovery.Sample Efficiency & Convergence: Direct pixel-to-torque/action mapping with Soft Actor-Critic (SAC) demands substantial sample complexity under sparse reward signals.Future Research Directions:Multimodal sensor fusion (incorporating wrist force-torque F/T sensing with vision).Pre-training visual representations via self-supervised contrastive learning.Domain randomization across lighting, friction, and camera angles for robust sim-to-real transfer.
