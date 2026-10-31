@@ -43,6 +43,7 @@ The objective is to control a 7-DOF **Franka Emika Panda** robotic arm equipped 
 ├── DEVELOPMENT.md                   # Implementation timeline and changelog[cite: 1]
 ├── instructions.md                  # Installation and execution instructions[cite: 1]
 └── README.md                        # Project documentation[cite: 1]
+```
 
 ⚙️ Installation & SetupOption A: Windows (PowerShell)PowerShell# Clone your fork
 git clone [https://github.com/nikospap21/Vision-Based-Contact-Rich-Robot-Manipulation.git](https://github.com/nikospap21/Vision-Based-Contact-Rich-Robot-Manipulation.git)
